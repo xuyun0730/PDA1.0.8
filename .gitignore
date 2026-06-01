@@ -23,3 +23,4 @@ local.properties
 *.ap_
 *.hprof
 ERP/ERP_testing/data/mock-db.json
+ERP/ERP_testing/*.log
