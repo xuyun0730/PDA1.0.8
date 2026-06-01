@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".ChooseMixActivity">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:background="@color/main_orange">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            android:text="混合方式"/>
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:onClick="finishActivity">
+
+            <ImageView
+                android:id="@+id/backImageView"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_centerVertical="true"
+                android:layout_marginStart="12dp"
+                android:gravity="center"
+                android:src="@mipmap/icon_back" />
+        </RelativeLayout>
+    </RelativeLayout>
+
+    <TextView
+        android:id="@+id/totalMixBtn"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:text="总混"
+        android:gravity="center"
+        android:textColor="@android:color/white"
+        android:textSize="17sp"
+        android:background="@drawable/orange_radius"
+        android:layout_marginTop="80dp"
+        android:layout_marginStart="50dp"
+        android:layout_marginEnd="50dp"
+        android:layout_gravity="center_horizontal"
+        />
+
+    <TextView
+        android:id="@+id/premixBtn"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:text="预混"
+        android:gravity="center"
+        android:textColor="@android:color/white"
+        android:textSize="17sp"
+        android:background="@drawable/orange_radius"
+        android:layout_marginTop="80dp"
+        android:layout_marginStart="50dp"
+        android:layout_marginEnd="50dp"
+        android:layout_gravity="center_horizontal"
+        />
+</LinearLayout>

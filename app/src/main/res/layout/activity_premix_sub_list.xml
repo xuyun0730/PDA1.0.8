@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".PremixSubListActivity"
+    android:orientation="vertical">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:background="@color/main_orange">
+        <TextView
+            android:id="@+id/titleView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            android:text="预混包物料列表"/>
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:onClick="finishActivity">
+
+            <ImageView
+                android:id="@+id/backImageView"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_centerVertical="true"
+                android:layout_marginStart="12dp"
+                android:gravity="center"
+                android:src="@mipmap/icon_back" />
+        </RelativeLayout>
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginBottom="40dp"
+            android:overScrollMode="never"
+            android:background="#fff" />
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_marginBottom="5dp">
+
+            <TextView
+                android:id="@+id/serialNumView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="14sp"
+                android:textColor="@color/font_common_dark"
+                android:layout_alignParentStart="true"
+                android:layout_marginStart="15dp"
+                android:layout_centerVertical="true"/>
+
+            <TextView
+                android:id="@+id/submitBtn"
+                android:layout_width="150dp"
+                android:layout_height="30dp"
+                android:text="提交"
+                android:gravity="center"
+                android:textColor="@android:color/white"
+                android:textSize="13sp"
+                android:background="@drawable/orange_radius"
+                android:layout_marginEnd="15dp"
+                android:layout_alignParentEnd="true"
+                />
+
+        </RelativeLayout>
+
+    </RelativeLayout>
+</LinearLayout>

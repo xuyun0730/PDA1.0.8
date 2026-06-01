@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/topPanel"
+    android:layout_width="match_parent"
+    android:background="@android:color/white"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/idView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:lines="1"
+        android:ellipsize="end"
+        android:text="ID"
+        android:textSize="16sp"
+        android:textColor="@color/font_common_dark"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"/>
+
+    <TextView
+        android:id="@+id/batchView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:text="批次"
+        android:textSize="16sp"
+        android:textColor="@color/font_common_dark"/>
+
+    <TextView
+        android:id="@+id/outProductView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:text="批次"
+        android:textSize="16sp"
+        android:textColor="@color/font_common_dark"/>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/line_default_bg"
+        android:layout_marginTop="8dp"/>
+</LinearLayout>

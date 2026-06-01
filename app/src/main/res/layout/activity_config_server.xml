@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".ConfigServerActivity">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:background="@color/main_orange">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="服务器信息"
+            android:textColor="@color/white"
+            android:textSize="16sp" />
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:onClick="finishActivity">
+
+            <ImageView
+                android:id="@+id/backImageView"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_centerVertical="true"
+                android:layout_marginStart="12dp"
+                android:gravity="center"
+                android:src="@mipmap/icon_back" />
+        </RelativeLayout>
+    </RelativeLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="30dp"
+        android:text="服务器 IP:"
+        android:textColor="@color/font_common_grey"
+        android:textSize="15sp" />
+
+    <EditText
+        android:id="@+id/ipView"
+        android:layout_width="match_parent"
+        android:layout_height="35dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="20dp"
+        android:background="@android:color/white"
+        android:digits="0123456789."
+        android:hint="请输入 IP"
+        android:inputType="number|numberDecimal"
+        android:lines="1"
+        android:paddingStart="5dp"
+        android:paddingEnd="5dp"
+        android:textColor="#333333"
+        android:textColorHint="#CCCCCC"
+        android:textSize="15sp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="30dp"
+        android:text="服务器端口:"
+        android:textColor="@color/font_common_grey"
+        android:textSize="15sp" />
+
+    <EditText
+        android:id="@+id/portView"
+        android:layout_width="match_parent"
+        android:layout_height="35dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="20dp"
+        android:background="@android:color/white"
+        android:hint="请输入端口"
+        android:inputType="number"
+        android:lines="1"
+        android:paddingStart="5dp"
+        android:paddingEnd="5dp"
+        android:textColor="#333333"
+        android:textColorHint="#CCCCCC"
+        android:textSize="15sp" />
+
+    <TextView
+        android:id="@+id/configBtn"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginStart="50dp"
+        android:layout_marginTop="80dp"
+        android:layout_marginEnd="50dp"
+        android:background="@drawable/orange_radius"
+        android:gravity="center"
+        android:text="确认"
+        android:textColor="@android:color/white"
+        android:textSize="17sp" />
+</LinearLayout>

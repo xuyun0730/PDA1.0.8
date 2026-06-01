@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    tools:context=".LoginActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/configText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:layout_marginTop="36dp"
+            android:layout_marginEnd="20dp"
+            android:text="服务器配置"
+            android:textColor="@color/main_orange"
+            android:textSize="14sp" />
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginTop="100dp"
+            android:layout_marginRight="16dp">
+
+            <EditText
+                android:id="@+id/nameEditText"
+                android:layout_width="match_parent"
+                android:layout_height="35dp"
+                android:layout_centerVertical="true"
+                android:layout_marginStart="2dp"
+                android:background="@android:color/white"
+                android:hint="请输入您的账号"
+                android:inputType="text"
+                android:lines="1"
+                android:textColor="#333333"
+                android:textColorHint="#CCCCCC"
+                android:textSize="15sp" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_alignParentBottom="true"
+                android:background="@color/line_default_bg" />
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="25dp"
+            android:layout_marginEnd="16dp">
+
+            <EditText
+                android:id="@+id/passwordEditText"
+                android:layout_width="match_parent"
+                android:layout_height="35dp"
+                android:layout_centerVertical="true"
+                android:layout_marginStart="2dp"
+                android:background="@android:color/white"
+                android:hint="请输入您的密码"
+                android:inputType="textPassword"
+                android:lines="1"
+                android:textColor="#333333"
+                android:textColorHint="#CCCCCC"
+                android:textSize="15sp" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_alignParentBottom="true"
+                android:background="@color/line_default_bg" />
+        </RelativeLayout>
+
+        <TextView
+            android:id="@+id/loginBtn"
+            android:layout_width="327dp"
+            android:layout_height="50dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="40dp"
+            android:background="@drawable/orange_radius"
+            android:gravity="center"
+            android:onClick="reqLogin"
+            android:text="登录"
+            android:textColor="@android:color/white"
+            android:textSize="17sp" />
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/versionText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="30dp"
+        android:gravity="center"
+        android:textColor="@color/font_common_light"
+        android:textSize="15sp" />
+
+    <TextView
+        android:id="@+id/switchUserText"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginEnd="18dp"
+        android:layout_marginBottom="18dp"
+        android:gravity="center"
+        android:minWidth="86dp"
+        android:text="切换用户"
+        android:textColor="@color/main_orange"
+        android:textSize="14sp" />
+</RelativeLayout>

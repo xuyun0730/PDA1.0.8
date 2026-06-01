@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/topPanel"
+    android:layout_width="match_parent"
+    android:background="@android:color/white"
+    android:layout_height="wrap_content">
+
+    <ImageView
+        android:id="@+id/statusView"
+        android:src="@mipmap/check_mark"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="16dp"
+        android:layout_centerVertical="true"/>
+
+    <TextView
+        android:id="@+id/materialIdView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:lines="1"
+        android:ellipsize="end"
+        android:text="物料ID"
+        android:textSize="14sp"
+        android:textColor="@color/font_common_dark"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"/>
+
+    <TextView
+        android:id="@+id/materialNameView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:lines="1"
+        android:ellipsize="end"
+        android:text="物料名称"
+        android:textSize="14sp"
+        android:textColor="@color/font_common_dark"
+        android:layout_marginTop="8dp"
+        android:layout_below="@id/materialIdView"
+        android:layout_alignStart="@id/materialIdView"/>
+
+    <TextView
+        android:id="@+id/inputAmountView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignStart="@id/materialIdView"
+        android:layout_below="@id/materialNameView"
+        android:layout_marginTop="5dp"
+        android:text="已投重量"
+        android:textSize="14sp"
+        android:textColor="@color/font_common_dark"/>
+
+    <TextView
+        android:id="@+id/totalMinAmtView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignStart="@id/materialIdView"
+        android:layout_below="@id/inputAmountView"
+        android:layout_marginTop="5dp"
+        android:text="最小重量"
+        android:textSize="14sp"
+        android:textColor="@color/font_common_dark"/>
+
+    <TextView
+        android:id="@+id/totalMaxAmtView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignStart="@id/materialIdView"
+        android:layout_below="@id/totalMinAmtView"
+        android:layout_marginTop="5dp"
+        android:text="最大重量"
+        android:textSize="14sp"
+        android:textColor="@color/font_common_dark"/>
+
+    <TextView
+        android:id="@+id/unitNameView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignStart="@id/materialIdView"
+        android:layout_below="@id/totalMaxAmtView"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="3dp"
+        android:text="单位名称"
+        android:textSize="14sp"
+        android:textColor="@color/font_common_dark"/>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/line_default_bg"
+        android:layout_alignParentBottom="true"/>
+</RelativeLayout>

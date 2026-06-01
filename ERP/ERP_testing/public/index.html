@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ERP Mock Server</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">PDA 投料联调看板</p>
+          <h1>ERP Mock 与 PDA 数据对照</h1>
+          <p class="hero-copy">
+            按 PDA 实际链路整理登录、批次配方、扫码 traceCode、投料提交和 ERP 回执。字段名尽量保持和 PDA 请求参数一致，方便边扫边核对。
+          </p>
+        </div>
+        <div class="hero-card">
+          <div class="stat">
+            <span id="batchCount">0</span>
+            <label>PDA 可取批次</label>
+          </div>
+          <div class="stat">
+            <span id="userCount">0</span>
+            <label>登录账号</label>
+          </div>
+          <div class="stat">
+            <span id="recordCount">0</span>
+            <label>投料记录</label>
+          </div>
+          <div class="stat">
+            <span id="usedCount">0</span>
+            <label>已用 traceCode</label>
+          </div>
+        </div>
+      </header>
+
+      <main class="grid">
+        <section class="panel wide">
+          <div class="panel-head">
+            <h2>PDA 调用链路</h2>
+            <button id="refreshBtn" class="ghost-btn">刷新数据</button>
+          </div>
+          <div class="pda-step-list">
+            <article class="pda-step">
+              <span class="step-no">1</span>
+              <div>
+                <strong>登录取 token</strong>
+                <code>POST /echain/public/mslJoint.do?action=generateToken4Msl&amp;tenantName=mslscsyxt</code>
+                <p>username / password -> data.token</p>
+              </div>
+            </article>
+            <article class="pda-step">
+              <span class="step-no">2</span>
+              <div>
+                <strong>获取生产批次</strong>
+                <code>POST /echain/thirdParty/mslJoint.do?action=getBatchList</code>
+                <p>operationTypeCode / page / rp -> content[]</p>
+              </div>
+            </article>
+            <article class="pda-step">
+              <span class="step-no">3</span>
+              <div>
+                <strong>获取配方明细</strong>
+                <code>POST /echain/thirdParty/mslJoint.do?action=getFormulaDetail</code>
+                <p>relationInfoId / batch -> materialList</p>
+              </div>
+            </article>
+            <article class="pda-step">
+              <span class="step-no">4</span>
+              <div>
+                <strong>扫码校验</strong>
+                <code>POST /echain/thirdParty/mslJoint.do?action=checkExistCode</code>
+                <p>traceCode -> exists / receiptId</p>
+              </div>
+            </article>
+            <article class="pda-step">
+              <span class="step-no">5</span>
+              <div>
+                <strong>投料提交</strong>
+                <code>POST /echain/thirdParty/mslJoint.do?action=batchSaveMaterialLaunchRecord</code>
+                <p>launchDetailJson / codeContentsJson -> saved</p>
+              </div>
+            </article>
+            <article class="pda-step">
+              <span class="step-no">6</span>
+              <div>
+                <strong>回执确认</strong>
+                <code>POST /echain/thirdParty/mslJoint.do?action=confirmReceipt</code>
+                <p>receiptId -> handshakeStatus ACKED</p>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="panel wide">
+          <div class="panel-head">
+            <h2>PDA 登录账号</h2>
+            <button id="userRefreshBtn" class="ghost-btn">刷新账号</button>
+          </div>
+          <form id="userForm" class="form-grid">
+            <input name="username" placeholder="账号 username" required />
+            <input name="password" placeholder="密码 password" required />
+            <input name="name" placeholder="显示名称 name" />
+            <button type="submit" class="primary-btn">保存用户</button>
+          </form>
+          <div class="panel-subhead">
+            <h3>当前用户</h3>
+            <p>这里的账号会参与 generateToken4Msl 登录校验，默认账号 pda / 123456。</p>
+          </div>
+          <div id="userList" class="list"></div>
+        </section>
+
+        <section class="panel wide">
+          <div class="panel-head">
+            <h2>PDA 批次 / 配方维护</h2>
+            <button id="resetBtn" class="ghost-btn danger">恢复示例数据</button>
+          </div>
+          <form id="batchForm" class="form-grid">
+            <input name="id" placeholder="批次ID，例如 batch003" required />
+            <input name="batch" placeholder="批次号，例如 PB20260525003" required />
+            <input name="maxSerialNum" placeholder="最大锅次" value="0" />
+            <input name="batchType" placeholder="类型 total / premix" value="total" />
+            <input name="outputProductId" placeholder="产出品ID" />
+            <input name="outputProductName" placeholder="产出品名称" />
+            <input name="outputProductNum" placeholder="产出品数量" value="1" />
+            <div class="batch-material-tools">
+              <div class="mode-switch" role="tablist" aria-label="物料类型切换">
+                <button id="batchMaterialPremixBtn" type="button" class="ghost-btn is-active">预混</button>
+                <button id="batchMaterialTotalBtn" type="button" class="ghost-btn">总混</button>
+              </div>
+              <button id="batchMaterialFillBtn" type="button" class="primary-btn">生成 materialList 样例</button>
+            </div>
+            <textarea name="materialList" rows="8" placeholder='[{
+  "id": "mat001",
+  "name": "原料1",
+  "formulaWeight": "10",
+  "netContentAllowGt": "9.5",
+  "netContentAllowLt": "10.5",
+  "isPremix": false,
+  "unitName": "kg",
+  "varietyPackUnitId": "unit001",
+  "belongOutputProductId": "out001",
+  "materialFlag": "belongDirectFeedMaterial"
+}]' required></textarea>
+            <button type="submit" class="primary-btn">保存批次</button>
+          </form>
+          <div class="panel-note compact-note">
+            这里维护的是 PDA 通过 getBatchList / getFormulaDetail 拿到的批次和配方数据。materialList 里的 id 会作为扫码二维码里的 businessVarietyId。
+          </div>
+        </section>
+
+        <section class="panel wide">
+          <div class="panel-head">
+            <h2>PDA 接口 JSON 预览</h2>
+            <button id="jsonModuleRefreshBtn" class="ghost-btn">刷新预览</button>
+          </div>
+          <div class="module-grid">
+            <article class="module-card">
+              <div class="module-card-head">
+                <strong>getBatchList 查询参数</strong>
+                <span class="status-chip" id="baseModuleStatusChip">未生成</span>
+              </div>
+              <pre id="baseModulePreview" class="json-preview empty">未生成</pre>
+              <button id="baseModuleGenBtn" type="button" class="ghost-btn">生成查询参数</button>
+            </article>
+            <article class="module-card">
+              <div class="module-card-head">
+                <strong>getFormulaDetail 主体</strong>
+                <span class="status-chip" id="outputModuleStatusChip">未生成</span>
+              </div>
+              <pre id="outputModulePreview" class="json-preview empty">未生成</pre>
+              <button id="outputModuleGenBtn" type="button" class="ghost-btn">生成配方主体</button>
+            </article>
+            <article class="module-card">
+              <div class="module-card-head">
+                <strong>materialList 物料数组</strong>
+                <div class="status-group">
+                  <span class="status-chip" id="materialPremixStatusChip">未生成-预混</span>
+                  <span class="status-chip" id="materialTotalStatusChip">未生成-总混</span>
+                </div>
+              </div>
+              <pre id="materialModulePreview" class="json-preview empty">未生成</pre>
+              <button id="materialModuleGenBtn" type="button" class="ghost-btn">生成物料数组</button>
+            </article>
+            <article class="module-card">
+              <div class="module-card-head">
+                <strong>完整配方返回体</strong>
+                <span class="status-chip" id="fullModuleStatusChip">未生成</span>
+              </div>
+              <pre id="fullModulePreview" class="json-preview empty">未生成</pre>
+              <button id="fullModuleGenBtn" type="button" class="ghost-btn">生成完整返回体</button>
+            </article>
+          </div>
+
+          <div class="panel-note compact-note">
+            这些 JSON 片段对应 PDA 页面实际读写的数据：批次列表、配方明细、物料数组、扫码投料明细。
+          </div>
+
+          <div class="table-wrap json-db-wrap">
+            <table class="data-table json-db-table">
+              <thead>
+                <tr>
+                  <th>接口片段</th>
+                  <th>PDA 对应模块</th>
+                  <th>状态</th>
+                  <th>更新时间</th>
+                  <th>说明</th>
+                </tr>
+              </thead>
+              <tbody id="jsonDbBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel wide">
+          <div class="panel-head">
+            <h2>PDA 批次 / 物料字段对照</h2>
+            <button id="batchTableRefreshBtn" class="ghost-btn">刷新表格</button>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>展开</th>
+                  <th>relationInfoId</th>
+                  <th>batch 生产批次</th>
+                  <th>operationType</th>
+                  <th>maxSerialNum 锅次</th>
+                  <th>产出品</th>
+                  <th>materialList</th>
+                  <th>PDA 扫码</th>
+                </tr>
+              </thead>
+              <tbody id="batchTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel wide qr-panel">
+          <div class="panel-head">
+            <div>
+              <p class="section-kicker">PDA traceCode</p>
+              <h2>PDA 扫码 traceCode 生成</h2>
+            </div>
+            <button id="qrCopyBtn" type="button" class="ghost-btn" disabled>复制 traceCode</button>
+          </div>
+          <div class="qr-guide">
+            <div>
+              <strong>traceCode 完整 URL</strong>
+              <span>二维码内容会生成 https://unify.id-cas.cn/lotinfo?...，PDA 会从 query 里解析字段。</span>
+            </div>
+            <div>
+              <strong>belongProduceBatch</strong>
+              <span>belongProduceBatch 必须等于 PDA 当前进入的批次号。</span>
+            </div>
+            <div>
+              <strong>serialNumber</strong>
+              <span>serialNumber 必须等于 PDA 当前显示锅次，否则 PDA 会先拦截。</span>
+            </div>
+          </div>
+          <div class="panel-subhead">
+            <h3>核心字段</h3>
+            <p>businessVarietyId 必须在当前批次 materialList 中存在；默认值匹配项目自带 Mock 批次 PB20260525001。</p>
+          </div>
+          <form id="qrForm" class="form-grid four-cols">
+            <label class="field">
+              <span>物料ID businessVarietyId</span>
+              <input name="businessVarietyId" value="mat001" required />
+            </label>
+            <label class="field">
+              <span>重量 weight</span>
+              <input name="weight" value="10" required />
+            </label>
+            <label class="field">
+              <span>单位 unitName</span>
+              <input name="unitName" value="kg" required />
+            </label>
+            <label class="field">
+              <span>库存批次 inventoryBatch</span>
+              <input name="inventoryBatch" value="INV001" />
+            </label>
+            <label class="field">
+              <span>有效期 validDate</span>
+              <input name="validDate" value="2026-12-31" />
+            </label>
+            <label class="field">
+              <span>所属生产批次 belongProduceBatch</span>
+              <input name="belongProduceBatch" value="PB20260525001" required />
+            </label>
+            <label class="field">
+              <span>锅次 serialNumber</span>
+              <input name="serialNumber" value="1" required />
+            </label>
+            <button type="submit" class="primary-btn form-action">生成二维码内容</button>
+          </form>
+          <div class="panel-note compact-note">
+            上面的表单框适合快速试码；下面的 JSON 输入适合直接粘贴接口对象。生成结果会同时显示 traceCode URL 和二维码图片。
+          </div>
+          <div class="qr-json-block">
+            <textarea id="qrJsonInput" class="qr-json-input" rows="8" spellcheck="false">{
+  "businessVarietyId": "mat001",
+  "weight": "10",
+  "unitName": "kg",
+  "inventoryBatch": "INV001",
+  "validDate": "2026-12-31",
+  "belongProduceBatch": "PB20260525001",
+  "serialNumber": "1"
+}</textarea>
+            <button id="qrJsonSubmitBtn" type="button" class="primary-btn">JSON 输入生成</button>
+          </div>
+          <div id="qrFieldPreview" class="qr-field-preview"></div>
+          <div class="qr-layout">
+            <div class="code-box">
+              <span id="qrResult">等待生成</span>
+            </div>
+            <div class="qr-preview-box">
+              <img id="qrPreview" alt="二维码预览" />
+            </div>
+          </div>
+          <div class="pda-payload-grid">
+            <article class="module-card">
+              <div class="module-card-head">
+                <strong>checkExistCode 请求</strong>
+                <span class="status-chip">扫码校验</span>
+              </div>
+              <pre id="checkPayloadPreview" class="json-preview empty">等待生成 traceCode</pre>
+            </article>
+            <article class="module-card">
+              <div class="module-card-head">
+                <strong>saveMaterialLaunchRecord 请求</strong>
+                <span class="status-chip">单条投料</span>
+              </div>
+              <pre id="singleSavePayloadPreview" class="json-preview empty">等待生成 traceCode</pre>
+            </article>
+            <article class="module-card">
+              <div class="module-card-head">
+                <strong>batchSaveMaterialLaunchRecord 请求</strong>
+                <span class="status-chip">批量投料</span>
+              </div>
+              <pre id="batchSavePayloadPreview" class="json-preview empty">等待生成 traceCode</pre>
+            </article>
+          </div>
+        </section>
+
+        <section class="panel wide">
+          <div class="panel-head">
+            <h2>PDA 批次进度对照</h2>
+            <button id="usageSummaryRefreshBtn" class="ghost-btn">刷新对照</button>
+          </div>
+          <div class="panel-note">
+            这里按 PDA 投料结果统计批次进度：计划物料来自 materialList，实际使用来自 save / batchSave 提交记录。
+          </div>
+          <div class="table-wrap">
+            <table class="data-table usage-summary-table">
+              <thead>
+                <tr>
+                  <th>批次号</th>
+                  <th>产出品</th>
+                  <th>生产项数</th>
+                  <th>预混项数</th>
+                  <th>实际使用记录</th>
+                  <th>已用二维码</th>
+                  <th>实际使用物料</th>
+                  <th>最近使用时间</th>
+                </tr>
+              </thead>
+              <tbody id="usageSummaryBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel wide">
+          <div class="panel-head">
+            <div>
+              <p class="section-kicker">Light ERP Core</p>
+              <h2>PDA 回执 / 投料流水 / 原始接口日志</h2>
+            </div>
+            <button id="erpTraceRefreshBtn" class="ghost-btn">刷新追踪</button>
+          </div>
+          <div class="panel-note">
+            PDA 原始请求、ERP 原始响应、转换后的投料流水会放在一起展示。check / save 类请求会生成 receiptId，PDA 可用 confirmReceipt 回握确认。
+          </div>
+          <div class="erp-trace-grid">
+            <article class="module-card">
+              <div class="module-card-head">
+                <strong>回执状态</strong>
+                <span class="status-chip" id="receiptCountChip">0 条</span>
+              </div>
+              <div id="receiptList" class="erp-mini-list"></div>
+            </article>
+            <article class="module-card">
+              <div class="module-card-head">
+                <strong>转换后的投料流水</strong>
+                <span class="status-chip" id="movementCountChip">0 条</span>
+              </div>
+              <div id="movementList" class="erp-mini-list"></div>
+            </article>
+            <article class="module-card">
+              <div class="module-card-head">
+                <strong>原始接口日志</strong>
+                <span class="status-chip" id="interfaceLogCountChip">0 条</span>
+              </div>
+              <div id="interfaceLogList" class="erp-mini-list"></div>
+            </article>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h2>PDA 当前可选批次</h2>
+          </div>
+          <div id="batchList" class="list"></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h2>PDA 投料提交记录</h2>
+          </div>
+          <div id="recordList" class="list"></div>
+        </section>
+      </main>
+    </div>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

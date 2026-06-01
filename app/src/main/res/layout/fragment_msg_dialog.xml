@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="250dp"
+        android:layout_height="200dp"
+        android:layout_gravity="center"
+        app:cardCornerRadius="8dp"
+        app:cardBackgroundColor="@color/white">
+
+        <RelativeLayout android:layout_width="match_parent"
+            android:layout_height="match_parent">
+            
+            <ImageView
+                android:id="@+id/iconView"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:src="@mipmap/exclamation"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="20dp"/>
+
+            <TextView
+                android:id="@+id/msgTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                android:textSize="16sp"
+                android:text="错误：物料A超量！"
+                android:textColor="@color/font_common_grey"
+                android:layout_centerInParent="true"/>
+
+            <TextView
+                android:id="@+id/btn"
+                android:layout_width="80dp"
+                android:layout_height="36dp"
+                android:text="确定"
+                android:gravity="center"
+                android:textColor="@android:color/white"
+                android:textSize="15sp"
+                android:background="@drawable/orange_radius"
+                android:layout_marginBottom="20dp"
+                android:layout_alignParentBottom="true"
+                android:layout_centerHorizontal="true"/>
+        </RelativeLayout>
+    </androidx.cardview.widget.CardView>
+
+</FrameLayout>
