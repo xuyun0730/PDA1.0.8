@@ -1,0 +1,499 @@
+{
+  "documentName": "PDA final interaction JSON interface specification",
+  "version": "1.0",
+  "language": "zh-CN",
+  "scope": "Only describes the final JSON interaction payloads between PDA and ERP/mock server. No source code behavior is changed by this file.",
+  "importantNotes": [
+    {
+      "note": "In the Android project, most ERP requests are sent as form fields. This file expresses the same payloads as JSON for interface review and ERP alignment."
+    },
+    {
+      "note": "launchDetailJson and codeContentsJson are stringified JSON arrays in the real request body."
+    },
+    {
+      "note": "traceCode should keep the full original QR code content. PDA should not rebuild or shorten it before sending."
+    },
+    {
+      "note": "productionDate is the preferred field name. produceDate is only a compatible alias when parsing QR code content."
+    }
+  ],
+  "flow": [
+
+
+    {
+      "stepNo": "1",
+      "screen": "登录界面",
+      "action": "用户点击登录",
+      "interface": "generateToken4Msl",
+      "method": "POST",
+      "path": "/echain/public/mslJoint.do?action=generateToken4Msl",
+      "request": {
+        "tenantName": "mslscsyxt",
+        "username": "pda",
+        "password": "123456"
+      },
+      "response": {
+        "code": 0,
+        "message": "success",
+        "data": {
+          "token": "mock-token-001"
+        }
+      }
+    },
+
+
+    {
+      "stepNo": "2_1",
+      "screen": "总混批次列表",
+      "action": "进入总混批次列表/刷新/搜索",
+      "interface": "getBatchList",
+      "method": "POST",
+      "path": "/echain/thirdParty/mslJoint.do?action=getBatchList",
+      "request": {
+        "ecafeToken": "mock-token-001",
+        "batch": "",
+        "rp": 15,
+        "page": 1,
+        "operationTypeCode": "overallFeed"
+      },
+      "responseDataShape": {
+        "content": [
+          {
+            "id": "batch001",
+            "batch": "PB20260525001",
+            "maxSerialNum": "0",
+            "outputProduct": {
+              "id": "prod001",
+              "name": "成品饲料A",
+              "num": 3
+            },
+            "materialList": []
+          }
+        ]
+      }
+    },
+    {
+      "stepNo": "2_2",
+      "screen": "直投批次列表",
+      "action": "进入直投批次列表/刷新/搜索",
+      "interface": "getBatchList",
+      "method": "POST",
+      "path": "/echain/thirdParty/mslJoint.do?action=getBatchList",
+      "request": {
+        "ecafeToken": "mock-token-001",
+        "batch": "",
+        "rp": 15,
+        "page": 1,
+        "operationTypeCode": "directFeed"
+      }
+    },
+    {
+      "stepNo": "2_3",
+      "screen": "预混批次列表",
+      "action": "进入预混批次列表/刷新/搜索",
+      "interface": "getBatchList",
+      "method": "POST",
+      "path": "/echain/thirdParty/mslJoint.do?action=getBatchList",
+      "request": {
+        "ecafeToken": "mock-token-001",
+        "batch": "",
+        "rp": 15,
+        "page": 1,
+        "operationTypeCode": "premixFeed"
+      }
+    },
+    {
+      "stepNo": "3_1",
+      "screen": "总混投料界面",
+      "action": "点击批次后加载当前锅次配方和已投状态",
+      "interface": "getBatchList",
+      "method": "POST",
+      "path": "/echain/thirdParty/mslJoint.do?action=getBatchList",
+      "request": {
+        "ecafeToken": "mock-token-001",
+        "relationInfoId": "batch001",
+        "batch": "PB20260525001",
+        "rp": 1,
+        "page": 1,
+        "operationTypeCode": "overallFeed",
+        "buildControls": "needBuildMaxSerialNum",
+        "serialNumber": "1"
+      },
+      "responseDataShape": {
+        "content": [
+          {
+            "id": "batch001",
+            "batch": "PB20260525001",
+            "maxSerialNum": "0",
+            "outputProduct": {
+              "id": "prod001",
+              "name": "成品饲料A",
+              "num": 3
+            },
+            "materialList": [
+              {
+                "id": "mat001",
+                "name": "玉米",
+                "unitName": "kg",
+                "netContentAllowGt": "9.5",
+                "netContentAllowLt": "10.5",
+                "inputAmount": "10",
+                "inventoryBatch": {
+                  "INV001": "10"
+                },
+                "productionDate": {
+                  "INV001": "2026-01-01"
+                },
+                "validDate": {
+                  "INV001": "2026-12-31"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "stepNo": "3_2",
+      "screen": "直投投料界面",
+      "action": "点击批次后加载当前锅次配方和已投状态",
+      "interface": "getBatchList",
+      "method": "POST",
+      "path": "/echain/thirdParty/mslJoint.do?action=getBatchList",
+      "request": {
+        "ecafeToken": "mock-token-001",
+        "relationInfoId": "batch001",
+        "batch": "PB20260525001",
+        "rp": 1,
+        "page": 1,
+        "operationTypeCode": "directFeed",
+        "buildControls": "needBuildMaxSerialNum",
+        "serialNumber": "1"
+      }
+    },
+    {
+      "stepNo": "3_3",
+      "screen": "预混列表界面",
+      "action": "点击预混批次后加载预混料列表",
+      "interface": "getBatchList",
+      "method": "POST",
+      "path": "/echain/thirdParty/mslJoint.do?action=getBatchList",
+      "request": {
+        "ecafeToken": "mock-token-001",
+        "relationInfoId": "batch001",
+        "batch": "PB20260525001",
+        "rp": 1,
+        "page": 1,
+        "operationTypeCode": "premixFeed"
+      }
+    },
+    {
+      "stepNo": "4",
+      "screen": "预混子料投料界面",
+      "action": "点击预混料后加载子配方和已投状态",
+      "interface": "getFormulaDetail",
+      "method": "POST",
+      "path": "/echain/thirdParty/mslJoint.do?action=getFormulaDetail",
+      "request": {
+        "ecafeToken": "mock-token-001",
+        "businessVarietyId": "premix001",
+        "relationInfoId": "batch001",
+        "operationTypeCode": "premixFeed",
+        "buildControls": "needBuildMaxSerialNum",
+        "serialNumber": "1"
+      },
+      "responseDataShape": {
+        "id": "premix001",
+        "batch": "PB20260525001",
+        "maxSerialNum": "0",
+        "outputProduct": {
+          "id": "premix001",
+          "name": "预混料A",
+          "num": 3
+        },
+        "materialList": [
+          {
+            "id": "mat-premix-child-001",
+            "name": "预混子料1",
+            "unitName": "kg",
+            "netContentAllowGt": "4.5",
+            "netContentAllowLt": "5.5",
+            "inputAmount": "5",
+            "inventoryBatch": {
+              "INV-PRE-001": "5"
+            },
+            "productionDate": {
+              "INV-PRE-001": "2026-01-01"
+            },
+            "validDate": {
+              "INV-PRE-001": "2026-12-31"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "stepNo": "5",
+      "screen": "扫码核对弹窗",
+      "action": "用户扫码并点击确定后进行 ERP 二维码校验",
+      "interface": "checkExistCode",
+      "method": "POST",
+      "path": "/echain/thirdParty/mslJoint.do?action=checkExistCode",
+      "finalRecommendedRequest": {
+        "ecafeToken": "mock-token-001",
+        "relationInfoId": "batch001",
+        "batch": "PB20260525001",
+        "serialNumber": "1",
+        "traceCode": "https://unify.id-cas.cn/lotinfo?businessVarietyId=mat001&weight=10&unitName=kg&inventoryBatch=INV001&productionDate=2026-01-01&validDate=2026-12-31&belongProduceBatch=PB20260525001&serialNumber=1"
+      },
+      "currentCompatibleRequest": {
+        "ecafeToken": "mock-token-001",
+        "traceCode": "https://unify.id-cas.cn/lotinfo?businessVarietyId=mat001&weight=10&unitName=kg&inventoryBatch=INV001&productionDate=2026-01-01&validDate=2026-12-31&belongProduceBatch=PB20260525001&serialNumber=1"
+      },
+      "parsedQrData": {
+        "businessVarietyId": "mat001",
+        "weight": "10",
+        "unitName": "kg",
+        "inventoryBatch": "INV001",
+        "productionDate": "2026-01-01",
+        "validDate": "2026-12-31",
+        "belongProduceBatch": "PB20260525001",
+        "serialNumber": "1"
+      },
+      "responseDataShape": {
+        "exists": false,
+        "code": "full traceCode",
+        "batch": "PB20260525001",
+        "parsed": {
+          "businessVarietyId": "mat001",
+          "weight": "10",
+          "unitName": "kg",
+          "inventoryBatch": "INV001",
+          "productionDate": "2026-01-01",
+          "validDate": "2026-12-31",
+          "belongProduceBatch": "PB20260525001",
+          "serialNumber": "1"
+        }
+      }
+    },
+    {
+      "stepNo": "6_1",
+      "screen": "总混投料界面",
+      "action": "提交前核对通过后保存总混投料",
+      "interface": "saveMaterialLaunchRecord",
+      "method": "POST",
+      "path": "/echain/thirdParty/mslJoint.do?action=saveMaterialLaunchRecord",
+      "request": {
+        "ecafeToken": "mock-token-001",
+        "relationInfoId": "batch001",
+        "batch": "PB20260525001",
+        "outputProductId": "prod001",
+        "serialNumber": 1,
+        "operationTypeCode": "overallFeed",
+        "operationDate": "2026-06-02 09:00:00",
+        "launchDetailJson": "[{\"businessVarietyId\":\"mat001\",\"inventoryBatch\":\"INV001\",\"num\":\"10\",\"unitName\":\"kg\",\"varietyPackUnitId\":\"unit001\",\"productionDate\":\"2026-01-01\",\"validDate\":\"2026-12-31\",\"field0\":\"belongDirectFeedMaterial\"}]",
+        "codeContentsJson": "[{\"traceCode\":\"https://unify.id-cas.cn/lotinfo?businessVarietyId=mat001&weight=10&unitName=kg&inventoryBatch=INV001&productionDate=2026-01-01&validDate=2026-12-31&belongProduceBatch=PB20260525001&serialNumber=1\",\"scanTimestamp\":\"1780381200000\",\"scanTime\":\"2026-06-02 09:00:00\"}]"
+      },
+      "expanded": {
+        "launchDetailJson": [
+          {
+            "businessVarietyId": "mat001",
+            "inventoryBatch": "INV001",
+            "num": "10",
+            "unitName": "kg",
+            "varietyPackUnitId": "unit001",
+            "productionDate": "2026-01-01",
+            "validDate": "2026-12-31",
+            "field0": "belongDirectFeedMaterial"
+          }
+        ],
+        "codeContentsJson": [
+          {
+            "traceCode": "https://unify.id-cas.cn/lotinfo?businessVarietyId=mat001&weight=10&unitName=kg&inventoryBatch=INV001&productionDate=2026-01-01&validDate=2026-12-31&belongProduceBatch=PB20260525001&serialNumber=1",
+            "scanTimestamp": "1780381200000",
+            "scanTime": "2026-06-02 09:00:00"
+          }
+        ]
+      }
+    },
+    {
+      "stepNo": "6_2",
+      "screen": "直投投料界面",
+      "action": "提交前核对通过后批量保存直投投料",
+      "interface": "batchSaveMaterialLaunchRecord",
+      "method": "POST",
+      "path": "/echain/thirdParty/mslJoint.do?action=batchSaveMaterialLaunchRecord",
+      "request": {
+        "ecafeToken": "mock-token-001",
+        "relationInfoId": "batch001",
+        "batch": "PB20260525001",
+        "outputProductId": "prod001",
+        "operationTypeCode": "directFeed",
+        "launchDetailJson": "[{\"serialNumber\":1,\"businessVarietyId\":\"mat001\",\"inventoryBatch\":\"INV001\",\"num\":\"10\",\"unitName\":\"kg\",\"varietyPackUnitId\":\"unit001\",\"productionDate\":\"2026-01-01\",\"validDate\":\"2026-12-31\"}]",
+        "codeContentsJson": "[{\"traceCode\":\"https://unify.id-cas.cn/lotinfo?businessVarietyId=mat001&weight=10&unitName=kg&inventoryBatch=INV001&productionDate=2026-01-01&validDate=2026-12-31&belongProduceBatch=PB20260525001&serialNumber=1\",\"scanTimestamp\":\"1780381200000\",\"scanTime\":\"2026-06-02 09:00:00\"}]"
+      },
+      "expanded": {
+        "launchDetailJson": [
+          {
+            "serialNumber": 1,
+            "businessVarietyId": "mat001",
+            "inventoryBatch": "INV001",
+            "num": "10",
+            "unitName": "kg",
+            "varietyPackUnitId": "unit001",
+            "productionDate": "2026-01-01",
+            "validDate": "2026-12-31"
+          }
+        ],
+        "codeContentsJson": [
+          {
+            "traceCode": "https://unify.id-cas.cn/lotinfo?businessVarietyId=mat001&weight=10&unitName=kg&inventoryBatch=INV001&productionDate=2026-01-01&validDate=2026-12-31&belongProduceBatch=PB20260525001&serialNumber=1",
+            "scanTimestamp": "1780381200000",
+            "scanTime": "2026-06-02 09:00:00"
+          }
+        ]
+      }
+    },
+    {
+      "stepNo": "6_3",
+      "screen": "预混子料投料界面",
+      "action": "提交前核对通过后保存预混子料投料",
+      "interface": "saveMaterialLaunchRecord",
+      "method": "POST",
+      "path": "/echain/thirdParty/mslJoint.do?action=saveMaterialLaunchRecord",
+      "currentRequest": {
+        "ecafeToken": "mock-token-001",
+        "relationInfoId": "batch001",
+        "batch": "PB20260525001",
+        "outputProductId": "premix001",
+        "serialNumber": 1,
+        "operationTypeCode": "premixFeed",
+        "operationDate": "2026-06-02 09:00:00",
+        "launchDetailJson": "[{\"businessVarietyId\":\"mat-premix-child-001\",\"formulaWeight\":\"5\"}]",
+        "codeContentsJson": "[{\"traceCode\":\"https://unify.id-cas.cn/lotinfo?businessVarietyId=mat-premix-child-001&weight=5&unitName=kg&inventoryBatch=INV-PRE-001&productionDate=2026-01-01&validDate=2026-12-31&belongProduceBatch=PB20260525001&serialNumber=1\",\"scanTimestamp\":\"1780381200000\",\"scanTime\":\"2026-06-02 09:00:00\"}]"
+      },
+      "finalRecommendedRequest": {
+        "ecafeToken": "mock-token-001",
+        "relationInfoId": "batch001",
+        "batch": "PB20260525001",
+        "outputProductId": "premix001",
+        "serialNumber": 1,
+        "operationTypeCode": "premixFeed",
+        "operationDate": "2026-06-02 09:00:00",
+        "launchDetailJson": "[{\"businessVarietyId\":\"mat-premix-child-001\",\"formulaWeight\":\"5\",\"inventoryBatch\":\"INV-PRE-001\",\"unitName\":\"kg\",\"productionDate\":\"2026-01-01\",\"validDate\":\"2026-12-31\"}]",
+        "codeContentsJson": "[{\"traceCode\":\"https://unify.id-cas.cn/lotinfo?businessVarietyId=mat-premix-child-001&weight=5&unitName=kg&inventoryBatch=INV-PRE-001&productionDate=2026-01-01&validDate=2026-12-31&belongProduceBatch=PB20260525001&serialNumber=1\",\"scanTimestamp\":\"1780381200000\",\"scanTime\":\"2026-06-02 09:00:00\"}]"
+      }
+    },
+    {
+      "stepNo": "7",
+      "screen": "提交成功后",
+      "action": "ERP 返回 receiptId 后 PDA 确认回执",
+      "interface": "confirmReceipt",
+      "method": "POST",
+      "path": "/echain/thirdParty/mslJoint.do?action=confirmReceipt",
+      "request": {
+        "ecafeToken": "mock-token-001",
+        "receiptId": "receipt_20260602_000001",
+        "clientStatus": "ACKED"
+      }
+    }
+  ],
+  "fieldNotes": {
+    "action": {
+      "zhNote": "ERP 动作名称",
+      "enNote": "ERP action name. It decides which ERP operation will be executed."
+    },
+    "ecafeToken": {
+      "zhNote": "登录后返回的 token",
+      "enNote": "Authentication token returned by the login interface."
+    },
+    "relationInfoId": {
+      "zhNote": "ERP 批次关系 ID",
+      "enNote": "ERP batch relation ID used by PDA to identify the current production batch."
+    },
+    "batch": {
+      "zhNote": "生产批次号",
+      "enNote": "Production batch number selected by the PDA user."
+    },
+    "operationTypeCode": {
+      "zhNote": "操作类型",
+      "enNote": "Operation type code, such as overallFeed, directFeed, or premixFeed."
+    },
+    "serialNumber": {
+      "zhNote": "当前锅次/作业序号",
+      "enNote": "Current work serial number used for recovery, validation, and submission."
+    },
+    "traceCode": {
+      "zhNote": "完整二维码原文",
+      "enNote": "Full original QR code content scanned by PDA."
+    },
+    "businessVarietyId": {
+      "zhNote": "物料 ID",
+      "enNote": "Material ID. It must match a material in the current formula list."
+    },
+    "weight": {
+      "zhNote": "二维码重量",
+      "enNote": "Weight encoded in the QR code."
+    },
+    "num": {
+      "zhNote": "提交明细中的投料重量",
+      "enNote": "Submitted launch weight for the material detail item."
+    },
+    "unitName": {
+      "zhNote": "重量单位",
+      "enNote": "Weight unit, for example kg."
+    },
+    "inventoryBatch": {
+      "zhNote": "库存批号",
+      "enNote": "Inventory batch number from the QR code or launch detail."
+    },
+    "productionDate": {
+      "zhNote": "生产日期",
+      "enNote": "Production date of the inventory batch."
+    },
+    "produceDate": {
+      "zhNote": "生产日期兼容别名",
+      "enNote": "Compatible alias of productionDate when parsing QR code content."
+    },
+    "validDate": {
+      "zhNote": "有效期",
+      "enNote": "Expiration date of the inventory batch."
+    },
+    "belongProduceBatch": {
+      "zhNote": "二维码所属生产批次",
+      "enNote": "Production batch number encoded in the QR code."
+    },
+    "outputProductId": {
+      "zhNote": "产出品 ID",
+      "enNote": "Output product ID of the selected production batch."
+    },
+    "operationDate": {
+      "zhNote": "PDA 操作时间",
+      "enNote": "PDA operation time."
+    },
+    "launchDetailJson": {
+      "zhNote": "投料明细 JSON 字符串数组",
+      "enNote": "Stringified JSON array of material launch detail items."
+    },
+    "codeContentsJson": {
+      "zhNote": "扫码内容 JSON 字符串数组",
+      "enNote": "Stringified JSON array of scanned QR code records."
+    },
+    "scanTimestamp": {
+      "zhNote": "扫码时间戳",
+      "enNote": "PDA scan timestamp in milliseconds."
+    },
+    "scanTime": {
+      "zhNote": "格式化扫码时间",
+      "enNote": "Formatted PDA scan time for ERP logs."
+    },
+    "receiptId": {
+      "zhNote": "ERP 回执 ID",
+      "enNote": "ERP receipt ID returned after saving launch records."
+    },
+    "clientStatus": {
+      "zhNote": "PDA 回执确认状态",
+      "enNote": "PDA acknowledgement status, usually ACKED."
+    }
+  }
+}

@@ -8,5 +8,6 @@ public class BatchLaunchItem {
     public String num;
     public String unitName;
     public String varietyPackUnitId;
+    public String productionDate;
     public String validDate;
 }

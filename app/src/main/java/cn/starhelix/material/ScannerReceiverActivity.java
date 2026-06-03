@@ -45,6 +45,10 @@ public abstract class ScannerReceiverActivity extends LoadingWidgetActivity {
 
     protected abstract void handleScanResult(String codeStr);
 
+    protected String buildBusinessScanConfirmDetail(String codeStr, Map<String, String> params) {
+        return "";
+    }
+
     protected void onScanDamageReported(String codeStr) {
         Toast.makeText(this, "已选择报损坏，本次扫码未入账", Toast.LENGTH_LONG).show();
     }
@@ -85,12 +89,19 @@ public abstract class ScannerReceiverActivity extends LoadingWidgetActivity {
             return builder.toString();
         }
 
+        String businessDetail = buildBusinessScanConfirmDetail(codeStr, new LinkedHashMap<>(params));
+        if (!StrUtil.isEmpty(businessDetail)) {
+            appendDetailLine(builder, "本地核对", businessDetail);
+        }
+
         appendKnownDetail(builder, params, "systenCode", "系统编码");
         appendKnownDetail(builder, params, "systemCode", "系统编码");
         appendKnownDetail(builder, params, "businessVarietyId", "物料ID");
         appendKnownDetail(builder, params, "weight", "重量");
         appendKnownDetail(builder, params, "unitName", "单位");
         appendKnownDetail(builder, params, "inventoryBatch", "库存批次");
+        appendKnownDetail(builder, params, "productionDate", "生产日期");
+        appendKnownDetail(builder, params, "produceDate", "生产日期");
         appendKnownDetail(builder, params, "validDate", "有效期");
         appendKnownDetail(builder, params, "belongProduceBatch", "所属生产批次");
         appendKnownDetail(builder, params, "serialNumber", "锅次");

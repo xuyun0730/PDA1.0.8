@@ -28,6 +28,7 @@ const defaultQrPayload = {
   weight: '10',
   unitName: 'kg',
   inventoryBatch: 'INV001',
+  productionDate: '2026-01-01',
   validDate: '2026-12-31',
   belongProduceBatch: 'PB20260525001',
   serialNumber: '1'
@@ -38,6 +39,7 @@ const qrCoreFields = [
   ['weight', '扫码重量'],
   ['unitName', '单位'],
   ['inventoryBatch', '库存批次'],
+  ['productionDate', '生产日期'],
   ['validDate', '有效期'],
   ['belongProduceBatch', '所属生产批次'],
   ['serialNumber', '锅次']
@@ -61,6 +63,7 @@ function buildLaunchDetail(payload, material = null) {
     serialNumber: Number(payload.serialNumber || 1),
     businessVarietyId: payload.businessVarietyId || material?.id || '',
     inventoryBatch: payload.inventoryBatch || '',
+    productionDate: payload.productionDate || payload.produceDate || '',
     num: String(payload.weight || ''),
     unitName: payload.unitName || material?.unitName || '',
     varietyPackUnitId: material?.varietyPackUnitId || '',
@@ -245,6 +248,7 @@ function buildQrPayloadFromJson(rawValue) {
     weight: source.weight || source.formulaWeight || defaultQrPayload.weight,
     unitName: source.unitName || source.unit || defaultQrPayload.unitName,
     inventoryBatch: source.inventoryBatch || defaultQrPayload.inventoryBatch,
+    productionDate: source.productionDate || source.produceDate || defaultQrPayload.productionDate,
     validDate: source.validDate || defaultQrPayload.validDate,
     belongProduceBatch: source.belongProduceBatch || defaultQrPayload.belongProduceBatch,
     serialNumber: source.serialNumber || defaultQrPayload.serialNumber
@@ -257,6 +261,7 @@ function normalizeQrPayload(payload) {
     weight: payload.weight || defaultQrPayload.weight,
     unitName: payload.unitName || defaultQrPayload.unitName,
     inventoryBatch: payload.inventoryBatch || defaultQrPayload.inventoryBatch,
+    productionDate: payload.productionDate || payload.produceDate || defaultQrPayload.productionDate,
     validDate: payload.validDate || defaultQrPayload.validDate,
     belongProduceBatch: payload.belongProduceBatch || defaultQrPayload.belongProduceBatch,
     serialNumber: payload.serialNumber || defaultQrPayload.serialNumber
@@ -307,6 +312,7 @@ function buildMaterialQrPayload(batch, material) {
     weight: deriveMaterialWeight(material),
     unitName: material.unitName || defaultQrPayload.unitName,
     inventoryBatch: batchNo,
+    productionDate: normalizeIsoDate(addDays(-30)),
     validDate: normalizeIsoDate(addDays(365)),
     belongProduceBatch: batchNo,
     serialNumber: deriveSerialNumber(batch)
@@ -370,6 +376,9 @@ function fillQrFormFromPayload(payload) {
     form.weight.value = normalizedPayload.weight;
     form.unitName.value = normalizedPayload.unitName;
     form.inventoryBatch.value = normalizedPayload.inventoryBatch;
+    if (form.productionDate) {
+      form.productionDate.value = normalizedPayload.productionDate;
+    }
     form.validDate.value = normalizedPayload.validDate;
     form.belongProduceBatch.value = normalizedPayload.belongProduceBatch;
     form.serialNumber.value = normalizedPayload.serialNumber;

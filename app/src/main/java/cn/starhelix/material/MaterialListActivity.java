@@ -3,6 +3,7 @@ package cn.starhelix.material;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.app.AlertDialog;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -34,6 +35,7 @@ import cn.starhelix.material.erp.model.ScanCheckResult;
 import cn.starhelix.material.erp.model.ScannedCodeRecord;
 import cn.starhelix.material.util.ConvertUtil;
 import cn.starhelix.material.util.DialogFragmentUtil;
+import cn.starhelix.material.util.PdaGuardUtil;
 import cn.starhelix.material.util.PreferenceUtil;
 import cn.starhelix.material.util.StrUtil;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
@@ -114,6 +116,64 @@ public class MaterialListActivity extends ScannerReceiverActivity {
                 });
     }
 
+    @Override
+    protected String buildBusinessScanConfirmDetail(String codeStr, Map<String, String> params) {
+        StringBuilder builder = new StringBuilder();
+        if (handledQrcodeMap != null && handledQrcodeMap.containsKey(codeStr)) {
+            PdaGuardUtil.appendLine(builder, "校验结果", "本页面已扫过，禁止重复扫码");
+            return builder.toString();
+        }
+
+        String formulaId = params.get("businessVarietyId");
+        String normalizedWeight = PdaGuardUtil.normalizeWeight(params.get("weight"));
+        if (StrUtil.isEmpty(formulaId)) {
+            PdaGuardUtil.appendLine(builder, "校验结果", "缺少物料ID");
+            return builder.toString();
+        }
+        if (StrUtil.isEmpty(normalizedWeight)) {
+            PdaGuardUtil.appendLine(builder, "校验结果", "缺少有效重量");
+            return builder.toString();
+        }
+
+        String belongProduceBatch = params.get("belongProduceBatch");
+        int idx = itemList == null ? -1 : findMaterialItemIndex(formulaId, belongProduceBatch);
+        if (idx < 0) {
+            PdaGuardUtil.appendLine(builder, "校验结果", "物料不在当前配方内");
+            return builder.toString();
+        }
+
+        MaterialItem item = itemList.get(idx);
+        PdaGuardUtil.normalizeMaterialItem(item);
+        BigDecimal weight = new BigDecimal(normalizedWeight);
+        BigDecimal afterAmount = PdaGuardUtil.safeAmount(item.inputAmount).add(weight);
+        BigDecimal upper = PdaGuardUtil.upperLimit(item);
+        String unit = PdaGuardUtil.unitName(item);
+
+        PdaGuardUtil.appendLine(builder, "物料名称", PdaGuardUtil.materialName(item));
+        PdaGuardUtil.appendLine(builder, "当前已投", PdaGuardUtil.amountText(item.inputAmount) + unit);
+        PdaGuardUtil.appendLine(builder, "本次重量", PdaGuardUtil.amountText(weight) + unit);
+        PdaGuardUtil.appendLine(builder, "扫码后合计", PdaGuardUtil.amountText(afterAmount) + unit);
+        if (upper != null) {
+            PdaGuardUtil.appendLine(builder, "允许上限", PdaGuardUtil.amountText(upper) + unit);
+        }
+
+        String qrUnit = params.get("unitName");
+        if (!StrUtil.isEmpty(qrUnit) && !StrUtil.isEmpty(unit) && !PdaGuardUtil.isSameText(qrUnit, unit)) {
+            PdaGuardUtil.appendLine(builder, "校验结果", "单位不匹配，确认后仍会被拦截");
+        } else if (!StrUtil.isEmpty(belongProduceBatch) && !belongProduceBatch.equalsIgnoreCase(batchName)) {
+            PdaGuardUtil.appendLine(builder, "校验结果", "生产批次不匹配，确认后仍会被拦截");
+        } else if (isSerialNumberMismatch(params.get("serialNumber"))) {
+            PdaGuardUtil.appendLine(builder, "校验结果", "锅次不匹配，确认后仍会被拦截");
+        } else if (PdaGuardUtil.isExpiredValidDate(params.get("validDate"))) {
+            PdaGuardUtil.appendLine(builder, "校验结果", "有效期已过期，确认后仍会被拦截");
+        } else if (upper != null && afterAmount.compareTo(upper) > 0) {
+            PdaGuardUtil.appendLine(builder, "校验结果", "扫码后将超量，确认后仍会被拦截");
+        } else {
+            PdaGuardUtil.appendLine(builder, "校验结果", "本地核对通过，确认后继续 ERP 校验");
+        }
+        return builder.toString();
+    }
+
     private void dealWithUnhandledQrcode(String codeStr) {
         Map<String, String> params;
         try {
@@ -138,9 +198,8 @@ public class MaterialListActivity extends ScannerReceiverActivity {
             return;
         }
 
-        weight = weight.replace("kg", "");
-        weight = weight.replace("g", "");
-        if (!StrUtil.isNumeric(weight)) {
+        weight = PdaGuardUtil.normalizeWeight(weight);
+        if (StrUtil.isEmpty(weight)) {
             Log.e(TAG, "二维码重量不是有效数字: " + weight);
             Toast.makeText(this, "二维码中的物料重量不是有效数字: " + weight, Toast.LENGTH_LONG).show();
             return;
@@ -154,18 +213,14 @@ public class MaterialListActivity extends ScannerReceiverActivity {
         }
 
         String serialNumber = params.get("serialNumber");
-        if (!StrUtil.isEmpty(serialNumber)) {
-            try {
-                int sn = Integer.parseInt(serialNumber);
-                if (currentSerialNum != sn) {
-                    Toast.makeText(this, "物料标签上的序号与当前投料锅次不匹配", Toast.LENGTH_LONG).show();
-                    return;
-                }
-            } catch (NumberFormatException e) {
-                Log.e(TAG, "二维码中的 serialNumber 不是有效数字: " + serialNumber, e);
-                Toast.makeText(this, "二维码中的序号不是有效数字", Toast.LENGTH_LONG).show();
-                return;
-            }
+        if (!StrUtil.isEmpty(serialNumber) && !StrUtil.isInteger(serialNumber)) {
+            Log.e(TAG, "二维码中的 serialNumber 不是有效数字: " + serialNumber);
+            Toast.makeText(this, "二维码中的序号不是有效数字", Toast.LENGTH_LONG).show();
+            return;
+        }
+        if (isSerialNumberMismatch(serialNumber)) {
+            Toast.makeText(this, "物料标签上的序号与当前投料锅次不匹配", Toast.LENGTH_LONG).show();
+            return;
         }
 
         String inventoryBatch = params.get("inventoryBatch");
@@ -173,12 +228,24 @@ public class MaterialListActivity extends ScannerReceiverActivity {
             inventoryBatch = null;
         }
 
+        String productionDate = params.get("productionDate");
+        if (StrUtil.isEmpty(productionDate)) {
+            productionDate = params.get("produceDate");
+        }
+        if (StrUtil.isEmpty(productionDate)) {
+            productionDate = null;
+        }
+
         String validDate = params.get("validDate");
         if (StrUtil.isEmpty(validDate)) {
             validDate = null;
         }
+        if (PdaGuardUtil.isExpiredValidDate(validDate)) {
+            Toast.makeText(this, "二维码有效期已过期，禁止投料", Toast.LENGTH_LONG).show();
+            return;
+        }
 
-        addFormula(formulaId, weight, inventoryBatch, validDate, belongProduceBatch, codeStr);
+        addFormula(formulaId, weight, inventoryBatch, productionDate, validDate, belongProduceBatch, codeStr);
     }
 
     @Override
@@ -208,7 +275,37 @@ public class MaterialListActivity extends ScannerReceiverActivity {
 
         itemList = new ArrayList<>();
         adapter = new MaterialListAdapter(itemList, this);
+        adapter.setOnItemClickListener((position, view) -> showInventoryBatchPicker(position));
         recyclerView.setAdapter(adapter);
+    }
+
+    private void showInventoryBatchPicker(int position) {
+        if (position < 0 || position >= itemList.size()) {
+            return;
+        }
+
+        MaterialItem item = itemList.get(position);
+        PdaGuardUtil.normalizeMaterialItem(item);
+        if (item.inventoryBatch.isEmpty()) {
+            DialogFragmentUtil.showMessageAlertDialog(this, "当前物料还没有已扫批号");
+            return;
+        }
+
+        List<String> keys = new ArrayList<>(item.inventoryBatch.keySet());
+        String[] labels = new String[keys.size()];
+        for (int i = 0; i < keys.size(); i++) {
+            String key = keys.get(i);
+            labels[i] = PdaGuardUtil.batchDisplayName(key)
+                    + "  "
+                    + PdaGuardUtil.amountText(PdaGuardUtil.inventoryAmount(item, key))
+                    + PdaGuardUtil.unitName(item);
+        }
+
+        new AlertDialog.Builder(this)
+                .setTitle("选择批号")
+                .setItems(labels, (dialog, which) ->
+                        DialogFragmentUtil.showMessageAlertDialog(this, PdaGuardUtil.buildBatchDetail(item, keys.get(which))))
+                .show();
     }
 
     private void initSubmitBtn() {
@@ -233,14 +330,29 @@ public class MaterialListActivity extends ScannerReceiverActivity {
                     responseItem.num = item.inventoryBatch.get(inventoryBatchKey).toString();
                     responseItem.unitName = item.unitName;
                     responseItem.varietyPackUnitId = item.varietyPackUnitId;
+                    responseItem.productionDate = item.productionDate.get(inventoryBatchKey);
                     responseItem.validDate = item.validDate.get(inventoryBatchKey);
                     responseItem.field0 = item.materialFlag;
                     launchDetail.add(responseItem);
                 }
             }
 
-            requestMaterialValidate(launchDetail);
+            showSubmitConfirmDialog(launchDetail);
         });
+    }
+
+    private void showSubmitConfirmDialog(List<MaterialResponseItem> launchDetail) {
+        if (!PdaGuardUtil.hasInputAmount(itemList)) {
+            DialogFragmentUtil.showMessageAlertDialog(this, "当前没有已扫码投料明细，不能提交");
+            return;
+        }
+
+        new AlertDialog.Builder(this)
+                .setTitle("提交前核对")
+                .setMessage(PdaGuardUtil.buildSubmitSummary(itemList, currentSerialNum))
+                .setNegativeButton("取消", null)
+                .setPositiveButton("确定提交", (dialog, which) -> requestMaterialValidate(launchDetail))
+                .show();
     }
 
     private int findMaterialItemIndex(String formulaId, String belongProduceBatch) {
@@ -259,7 +371,7 @@ public class MaterialListActivity extends ScannerReceiverActivity {
         return -1;
     }
 
-    public void addFormula(String formulaId, String weight, String inventoryBatch, String validDate, String belongProduceBatch, String codeStr) {
+    public void addFormula(String formulaId, String weight, String inventoryBatch, String productionDate, String validDate, String belongProduceBatch, String codeStr) {
         int idx = findMaterialItemIndex(formulaId, belongProduceBatch);
         if (idx < 0) {
             DialogFragmentUtil.showMessageAlertDialog(
@@ -270,6 +382,7 @@ public class MaterialListActivity extends ScannerReceiverActivity {
         }
 
         MaterialItem item = itemList.get(idx);
+        PdaGuardUtil.normalizeMaterialItem(item);
         String maxStr = StrUtil.isEmpty(item.netContentAllowLt) ? "0" : item.netContentAllowLt;
         if (item.inputAmount.add(new BigDecimal(weight)).compareTo(new BigDecimal(maxStr)) > 0) {
             Log.i(TAG, "weight=" + weight);
@@ -293,6 +406,7 @@ public class MaterialListActivity extends ScannerReceiverActivity {
         } else {
             item.inventoryBatch.put(inventoryBatchKey, new BigDecimal(weight));
         }
+        item.productionDate.put(inventoryBatchKey, productionDate);
         item.validDate.put(inventoryBatchKey, validDate);
 
         adapter.notifyItemChanged(idx);
@@ -360,6 +474,7 @@ public class MaterialListActivity extends ScannerReceiverActivity {
 
                         serialNumView.setText(String.format(Locale.CHINA, "第 %d 锅 / 共 %d 锅", currentSerialNum, maxOpNum));
 
+                        PdaGuardUtil.normalizeMaterialList(content.materialList);
                         itemList.clear();
                         itemList.addAll(content.materialList);
                         adapter.notifyDataSetChanged();
@@ -374,6 +489,13 @@ public class MaterialListActivity extends ScannerReceiverActivity {
 
     private String getWorkSerialKey() {
         return OP_TYPE_CODE + "|" + batchId + "|" + batchName;
+    }
+
+    private boolean isSerialNumberMismatch(String serialNumber) {
+        if (StrUtil.isEmpty(serialNumber) || !StrUtil.isInteger(serialNumber)) {
+            return false;
+        }
+        return currentSerialNum != Integer.parseInt(serialNumber);
     }
 
     private void requestMaterialValidate(List<MaterialResponseItem> launchDetail) {
@@ -434,6 +556,7 @@ public class MaterialListActivity extends ScannerReceiverActivity {
                                 for (MaterialItem materialItem : itemList) {
                                     materialItem.inputAmount = new BigDecimal("0");
                                     materialItem.inventoryBatch = new HashMap<>();
+                                    materialItem.productionDate = new HashMap<>();
                                     materialItem.validDate = new HashMap<>();
                                 }
                                 handledQrcodeMap = new HashMap<>();

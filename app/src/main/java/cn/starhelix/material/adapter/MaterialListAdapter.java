@@ -19,6 +19,7 @@ import java.util.Locale;
 import cn.starhelix.material.R;
 import cn.starhelix.material.entity.FlowDetail;
 import cn.starhelix.material.entity.MaterialItem;
+import cn.starhelix.material.util.PdaGuardUtil;
 import cn.starhelix.material.util.StrUtil;
 
 public class MaterialListAdapter extends RecyclerView.Adapter<MaterialListAdapter.VH> {
@@ -56,6 +57,7 @@ public class MaterialListAdapter extends RecyclerView.Adapter<MaterialListAdapte
         holder.totalMinAmtView.setText(String.format(Locale.CHINA, "最小重量：%s", itemInfo.netContentAllowGt));
         holder.totalMaxAmtView.setText(String.format(Locale.CHINA, "最大重量：%s", itemInfo.netContentAllowLt));
         holder.unitNameView.setText(String.format(Locale.CHINA, "单位名称：%s", itemInfo.unitName));
+        holder.batchSummaryView.setText(PdaGuardUtil.buildBatchSummary(itemInfo));
 
         String minStr = StrUtil.isEmpty(itemInfo.netContentAllowGt) ? "0" : itemInfo.netContentAllowGt;
         String maxStr = StrUtil.isEmpty(itemInfo.netContentAllowLt) ? "0" : itemInfo.netContentAllowLt;
@@ -85,6 +87,7 @@ public class MaterialListAdapter extends RecyclerView.Adapter<MaterialListAdapte
         public TextView totalMinAmtView;
         public TextView totalMaxAmtView;
         public TextView unitNameView;
+        public TextView batchSummaryView;
 
         public VH(View v) {
             super(v);
@@ -96,6 +99,7 @@ public class MaterialListAdapter extends RecyclerView.Adapter<MaterialListAdapte
             totalMinAmtView = v.findViewById(R.id.totalMinAmtView);
             totalMaxAmtView = v.findViewById(R.id.totalMaxAmtView);
             unitNameView = v.findViewById(R.id.unitNameView);
+            batchSummaryView = v.findViewById(R.id.batchSummaryView);
         }
     }
 }

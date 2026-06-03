@@ -28,4 +28,7 @@ public class MaterialItem {
     // key 为库存批次，value 为该库存批次对应的有效期。
     // 同样来自二维码解析后的本地暂存。
     public Map<String, String> validDate = new HashMap<>();
+
+    // key 为库存批次，value 为该库存批次对应的生产日期。
+    public Map<String, String> productionDate = new HashMap<>();
 }

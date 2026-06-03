@@ -79,10 +79,24 @@
         android:layout_alignStart="@id/materialIdView"
         android:layout_below="@id/totalMaxAmtView"
         android:layout_marginTop="5dp"
-        android:layout_marginBottom="3dp"
         android:text="单位名称"
         android:textSize="14sp"
         android:textColor="@color/font_common_dark"/>
+
+    <TextView
+        android:id="@+id/batchSummaryView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignStart="@id/materialIdView"
+        android:layout_below="@id/unitNameView"
+        android:layout_marginTop="5dp"
+        android:layout_marginEnd="60dp"
+        android:layout_marginBottom="8dp"
+        android:ellipsize="end"
+        android:lines="1"
+        android:text="已扫批号：无"
+        android:textColor="@color/font_common_grey"
+        android:textSize="14sp" />
 
     <View
         android:layout_width="match_parent"

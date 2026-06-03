@@ -1,5 +1,6 @@
 const express = require('express');
 const fs = require('fs/promises');
+const os = require('os');
 const path = require('path');
 const QRCode = require('qrcode');
 
@@ -135,7 +136,7 @@ async function readState() {
 
 async function writeState(state) {
   await fs.mkdir(DATA_DIR, { recursive: true });
-  const tempFile = `${DATA_FILE}.tmp`;
+  const tempFile = `${DATA_FILE}.${process.pid}.${Date.now()}.${Math.random().toString(16).slice(2)}.tmp`;
   await fs.writeFile(tempFile, JSON.stringify(ensureStateShape(state), null, 2), 'utf8');
   await fs.rename(tempFile, DATA_FILE);
 }
@@ -249,6 +250,7 @@ function buildQrContent(input) {
   params.set('weight', String(input.weight || '10'));
   params.set('unitName', input.unitName || 'kg');
   params.set('inventoryBatch', input.inventoryBatch || 'INV001');
+  params.set('productionDate', input.productionDate || input.produceDate || '2026-01-01');
   params.set('validDate', input.validDate || '2026-12-31');
   params.set('belongProduceBatch', input.belongProduceBatch || 'PB20260525001');
   params.set('serialNumber', String(input.serialNumber || '1'));
@@ -393,6 +395,7 @@ function buildBatchLaunchRecord(payload, currentBatch, launchDetailList, codeCon
       num: item?.num || '',
       unitName: item?.unitName || '',
       varietyPackUnitId: item?.varietyPackUnitId || '',
+      productionDate: item?.productionDate || item?.produceDate || '',
       validDate: item?.validDate || ''
     })),
     codeContents
@@ -428,6 +431,7 @@ function normalizePdaMaterialPayload(payload, parsed = {}, batch = null, traceCo
     weight: parsed.weight || payload.weight || payload.num || '',
     unitName: parsed.unitName || payload.unitName || '',
     inventoryBatch: parsed.inventoryBatch || payload.inventoryBatch || '',
+    productionDate: parsed.productionDate || parsed.produceDate || payload.productionDate || payload.produceDate || '',
     validDate: parsed.validDate || payload.validDate || '',
     belongProduceBatch: parsed.belongProduceBatch || payload.belongProduceBatch || '',
     serialNumber: parsed.serialNumber || payload.serialNumber || '',
@@ -443,6 +447,7 @@ function normalizeLaunchDetailItem(item, currentBatch, traceCode = '') {
     weight: item?.num || item?.weight || '',
     unitName: item?.unitName || '',
     inventoryBatch: item?.inventoryBatch || '',
+    productionDate: item?.productionDate || item?.produceDate || '',
     validDate: item?.validDate || '',
     serialNumber: String(item?.serialNumber || ''),
     varietyPackUnitId: item?.varietyPackUnitId || '',
@@ -622,6 +627,7 @@ function buildMaterialListForPda(state, batch, payload = {}) {
       ...material,
       inputAmount: '0',
       inventoryBatch: {},
+      productionDate: {},
       validDate: {}
     };
 
@@ -631,6 +637,7 @@ function buildMaterialListForPda(state, batch, payload = {}) {
         const inventoryBatch = movement.inventoryBatch || 'null';
         enriched.inputAmount = addDecimalString(enriched.inputAmount, movement.weight);
         enriched.inventoryBatch[inventoryBatch] = addDecimalString(enriched.inventoryBatch[inventoryBatch], movement.weight);
+        enriched.productionDate[inventoryBatch] = movement.productionDate || '';
         enriched.validDate[inventoryBatch] = movement.validDate || '';
       });
 
@@ -703,6 +710,7 @@ function addMaterialMovement(state, input) {
     weight: input.weight || '',
     unitName: input.unitName || '',
     inventoryBatch: input.inventoryBatch || '',
+    productionDate: input.productionDate || '',
     validDate: input.validDate || '',
     serialNumber: input.serialNumber || '',
     traceCode: input.traceCode || '',
@@ -1116,6 +1124,7 @@ app.post('/echain/thirdParty/mslJoint.do', async (req, res) => {
         weight: transformed.weight,
         unitName: transformed.unitName,
         inventoryBatch: transformed.inventoryBatch,
+        productionDate: transformed.productionDate,
         validDate: transformed.validDate,
         serialNumber: transformed.serialNumber,
         traceCode: codeContent.traceCode || '',
@@ -1285,6 +1294,7 @@ app.post('/echain/thirdParty/mslJoint.do', async (req, res) => {
         weight: normalizedItem.weight,
         unitName: normalizedItem.unitName,
         inventoryBatch: normalizedItem.inventoryBatch,
+        productionDate: normalizedItem.productionDate,
         validDate: normalizedItem.validDate,
         serialNumber: normalizedItem.serialNumber,
         traceCode: normalizedItem.traceCode,
@@ -1483,6 +1493,13 @@ function listen(port) {
   });
 }
 
+function getLanUrls(port) {
+  return Object.values(os.networkInterfaces())
+    .flat()
+    .filter((item) => item && item.family === 'IPv4' && !item.internal)
+    .map((item) => `http://${item.address}:${port}`);
+}
+
 async function startServer() {
   await ensureDataFile();
 
@@ -1494,7 +1511,13 @@ async function startServer() {
       const server = await listen(currentPort);
       const address = server.address();
       const actualPort = typeof address === 'object' && address ? address.port : currentPort;
-      console.log(`ERP Mock Server running at http://${HOST}:${actualPort}`);
+      const lanUrls = getLanUrls(actualPort);
+      console.log(`ERP Mock Server running`);
+      console.log(`Local: http://localhost:${actualPort}`);
+      console.log(`Local IP: http://127.0.0.1:${actualPort}`);
+      if (lanUrls.length) {
+        console.log(`LAN: ${lanUrls.join(', ')}`);
+      }
       return;
     } catch (error) {
       if (error.code === 'EADDRINUSE') {

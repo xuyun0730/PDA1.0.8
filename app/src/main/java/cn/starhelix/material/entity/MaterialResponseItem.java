@@ -7,6 +7,7 @@ public class MaterialResponseItem {
     public String num;               // 当前库存批次下的累计投料重量
     public String unitName;          // 重量单位，例如 kg
     public String varietyPackUnitId; // 包装单位 id
+    public String productionDate;    // 生产日期
     public String validDate;         // 有效期
     public String field0;            // ERP 约定扩展字段，对应 materialFlag
 }
